@@ -1,35 +1,47 @@
-from machine import Pin, ADC, I2C
+from machine import ADC, Pin
 from time import sleep
-from lcd_api import LcdApi
-from i2c_lcd import I2cLcd
+from esp32_lcd import Esp32Lcd
 
+# LCD 16x2 - pinos ligados ao ESP32
+lcd = Esp32Lcd(
+    rs=14,
+    enable=27,
+    d4=16,
+    d5=17,
+    d6=18,
+    d7=19,
+    num_lines=2,
+    num_columns=16
+)
+
+# Sensor de umidade
 moisture_sensor = ADC(Pin(34))
 moisture_sensor.atten(ADC.ATTN_11DB)
 moisture_sensor.width(ADC.WIDTH_10BIT)
 
+# Relé de irrigação
 relay = Pin(26, Pin.OUT)
 relay.value(0)
 
-i2c = I2C(1, scl=Pin(22), sda=Pin(21), freq=400000)
-lcd = I2cLcd(i2c, 0x27, 2, 16)
-
 def read_moisture():
-    value = moisture_sensor.read()
-    moisture = (1023 - value) * 100 // 1023
+    raw = moisture_sensor.read()
+    moisture = (1023 - raw) * 100 // 1023
     return moisture
 
 while True:
     moisture = read_moisture()
     print("Moisture: {}%".format(moisture))
 
-    if moisture >= 74:
+    lcd.clear()
+    lcd.putstr("Moisture: {}%".format(moisture))
+    
+    if moisture < 40:
         relay.value(1)
-        lcd.clear()
-        lcd.putstr("Status: WATERING")
+        lcd.move_to(0, 1)
+        lcd.putstr("Watering ON")
     else:
         relay.value(0)
-        lcd.clear()
-        lcd.putstr("Status: STOPPED")
+        lcd.move_to(0, 1)
+        lcd.putstr("Watering OFF")
 
     sleep(2)
-

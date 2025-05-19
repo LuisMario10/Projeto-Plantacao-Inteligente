@@ -3,36 +3,33 @@ from time import sleep
 from lcd_api import LcdApi
 from i2c_lcd import I2cLcd
 
-# Configurações do sensor e relé
-sensor_umidade = ADC(Pin(34))
-sensor_umidade.atten(ADC.ATTN_11DB)  # Para permitir leitura até 3.6V
-sensor_umidade.width(ADC.WIDTH_10BIT)  # Valor de 0 a 1023
+moisture_sensor = ADC(Pin(34))
+moisture_sensor.atten(ADC.ATTN_11DB)
+moisture_sensor.width(ADC.WIDTH_10BIT)
 
-rele = Pin(26, Pin.OUT)
-rele.value(0)  # Inicialmente desligado
+relay = Pin(26, Pin.OUT)
+relay.value(0)
 
-# Configuração do LCD via I2C
 i2c = I2C(1, scl=Pin(22), sda=Pin(21), freq=400000)
-lcd = I2cLcd(i2c, 0x27, 2, 16)  # Endereço I2C pode variar (0x27 ou 0x3F)
+lcd = I2cLcd(i2c, 0x27, 2, 16)
 
-# Função para mapear leitura (ajuste conforme calibração)
-def ler_umidade():
-    valor = sensor_umidade.read()
-    umidade = (1023 - valor) * 100 // 1023  # Invertemos: solo seco = 0, molhado = 100
-    return umidade
+def read_moisture():
+    value = moisture_sensor.read()
+    moisture = (1023 - value) * 100 // 1023
+    return moisture
 
-# Loop principal
 while True:
-    umidade = ler_umidade()
-    print("Umidade: {}%".format(umidade))
+    moisture = read_moisture()
+    print("Moisture: {}%".format(moisture))
 
-    if umidade >= 74:
-        rele.value(1)
+    if moisture >= 74:
+        relay.value(1)
         lcd.clear()
-        lcd.putstr("Status: REGANDO")
+        lcd.putstr("Status: WATERING")
     else:
-        rele.value(0)
+        relay.value(0)
         lcd.clear()
-        lcd.putstr("Status: PARADO")
+        lcd.putstr("Status: STOPPED")
 
     sleep(2)
+

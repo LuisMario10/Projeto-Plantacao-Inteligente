@@ -33,7 +33,7 @@ while True:
     print("Moisture: {}%".format(moisture))
 
     lcd.clear()
-    lcd.putstr("Moisture: {}%".format(moisture))
+    lcd.putstr(f"Moisture: {moisture}")
     
     if moisture < 40:
         relay.value(1)

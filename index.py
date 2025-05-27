@@ -20,28 +20,31 @@ moisture_sensor.atten(ADC.ATTN_11DB)
 moisture_sensor.width(ADC.WIDTH_10BIT)
 
 # Relé de irrigação
-relay = Pin(26, Pin.OUT)
-relay.value(0)
+rele = Pin(26, Pin.OUT)
+rele.value(0)
 
 def read_moisture():
     raw = moisture_sensor.read()
     moisture = (1023 - raw) * 100 // 1023
     return moisture
 
-while True:
-    moisture = read_moisture()
-    print("Moisture: {}%".format(moisture))
-
-    lcd.clear()
-    lcd.putstr(f"Moisture: {moisture}")
+def main():
+    while True:
+        moisture = read_moisture()
+        print(f"Valor Moisture: {moisture}%")
     
-    if moisture < 40:
-        relay.value(1)
+        lcd.clear()
+        lcd.putstr(f"Valor Moisture: {moisture}%")
+    
+        if moisture < 40:
+            rele.value(1)
+            lcd.move_to(0, 1)
+            lcd.putstr("Regando...")
+        
+        rele.value(0)
         lcd.move_to(0, 1)
-        lcd.putstr("Watering ON")
-    else:
-        relay.value(0)
-        lcd.move_to(0, 1)
-        lcd.putstr("Watering OFF")
-
-    sleep(2)
+        lcd.putstr("Solo já esta umido!")
+    
+        sleep(2)
+main()
+    
